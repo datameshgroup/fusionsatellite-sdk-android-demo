@@ -14,12 +14,12 @@ import java.time.Instant;
 
 import au.com.dmg.fusion.Message;
 import au.com.dmg.fusion.MessageHeader;
-import au.com.dmg.fusion.SaleToPOIRequest;
 import au.com.dmg.fusion.data.MessageCategory;
 import au.com.dmg.fusion.data.MessageClass;
 import au.com.dmg.fusion.data.MessageType;
 import au.com.dmg.fusion.data.PaymentType;
 import au.com.dmg.fusion.data.UnitOfMeasure;
+import au.com.dmg.fusion.request.SaleToPOIRequest;
 import au.com.dmg.fusion.request.paymentrequest.AmountsReq;
 import au.com.dmg.fusion.request.paymentrequest.PaymentData;
 import au.com.dmg.fusion.request.paymentrequest.PaymentRequest;
@@ -115,9 +115,9 @@ public class MainActivity extends AppCompatActivity {
 
         intent.setAction("au.com.axispay.action.SaleToPOIRequest");
         intent.addCategory(Intent.CATEGORY_DEFAULT);
-        intent.putExtra("SaleToPOIJson", message.toJson());
-        intent.putExtra("ParentActivityId", this.getPackageName());
-        intent.putExtra("JsonVersion", 1);
+        intent.putExtra(Message.INTENT_EXTRA_MESSAGE, message.toJson());
+        intent.putExtra(Message.INTENT_EXTRA_PARENT_ID, this.getPackageName());
+        intent.putExtra(Message.INTENT_EXTRA_VERSION, Message.VERSION_UNDEFINED);
 
         startActivity(intent);
     }
@@ -229,13 +229,13 @@ public class MainActivity extends AppCompatActivity {
         if (intent == null) {
             return false;
         }
-        return intent.hasExtra("SaleToPOIJson");
+        return intent.hasExtra(Message.INTENT_EXTRA_MESSAGE);
     }
 
     private void handleResponseIntent(Intent intent) {
         Message message = null;
         try {
-            message = Message.fromJson(intent.getStringExtra("SaleToPOIJson"));
+            message = Message.fromJson(intent.getStringExtra(Message.INTENT_EXTRA_MESSAGE));
         } catch (Exception e) {
             Toast.makeText(this, "Error reading intent.", Toast.LENGTH_SHORT).show();
             e.printStackTrace();
