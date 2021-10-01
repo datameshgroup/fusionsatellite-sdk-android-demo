@@ -20,6 +20,7 @@ import au.com.dmg.fusion.data.MessageClass;
 import au.com.dmg.fusion.data.MessageType;
 import au.com.dmg.fusion.data.PaymentType;
 import au.com.dmg.fusion.data.UnitOfMeasure;
+import au.com.dmg.fusion.request.SaleTerminalData;
 import au.com.dmg.fusion.request.SaleToPOIRequest;
 import au.com.dmg.fusion.request.paymentrequest.AmountsReq;
 import au.com.dmg.fusion.request.paymentrequest.PaymentData;
@@ -105,6 +106,7 @@ public class MainActivity extends AppCompatActivity {
         sendRequest(request);
     }
 
+
     private String generateRandomServiceID(){
         StringBuilder serviceId = new StringBuilder();
 
@@ -124,11 +126,16 @@ public class MainActivity extends AppCompatActivity {
         // wrapper of request.
         Message message = new Message(request);
 
+        // this is required for the intent filter.
         intent.setAction("au.com.axispay.action.SaleToPOIRequest");
+        // this is required for the intent filter.
         intent.addCategory(Intent.CATEGORY_DEFAULT);
+
         intent.putExtra(Message.INTENT_EXTRA_MESSAGE, message.toJson());
         intent.putExtra(Message.INTENT_EXTRA_PARENT_ID, this.getPackageName());
-        intent.putExtra(Message.INTENT_EXTRA_VERSION, Message.VERSION_UNDEFINED);
+        // name of this app, that get's treated as the POS label by the terminal.
+        intent.putExtra("ApplicationName", "DemoPOS");
+        intent.putExtra("SoftwareVersion", "1.0.0");
 
         startActivity(intent);
     }
