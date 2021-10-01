@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Random;
 
 import au.com.dmg.fusion.Message;
 import au.com.dmg.fusion.MessageHeader;
@@ -67,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
                         .messageClass(MessageClass.Service)
                         .messageCategory(MessageCategory.Payment)
                         .messageType(MessageType.Request)
-                        .serviceID("SERVICEID1")
+                        .serviceID(generateRandomServiceID())
                         .build())
                 .request(new PaymentRequest.Builder()
                         .saleData(new SaleData.Builder()
@@ -104,6 +105,16 @@ public class MainActivity extends AppCompatActivity {
         sendRequest(request);
     }
 
+    private String generateRandomServiceID(){
+        StringBuilder serviceId = new StringBuilder();
+
+        Random rand = new Random();
+        for (int i=0; i<10; ++i) {
+            serviceId.append(rand.nextInt(10));
+        }
+        return serviceId.toString();
+    }
+
     private void sendRequest(SaleToPOIRequest request) {
         Intent intent = getPackageManager().getLaunchIntentForPackage("au.com.dmg.axispay");
         if (intent == null) {
@@ -129,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
                                 .messageClass(MessageClass.Service)
                                 .messageCategory(MessageCategory.Payment)
                                 .messageType(MessageType.Request)
-                                .serviceID("SERVICEID1")
+                                .serviceID(generateRandomServiceID())
                                 .build()
                 )
                 .request(
@@ -172,7 +183,7 @@ public class MainActivity extends AppCompatActivity {
                                 .messageClass(MessageClass.Service)
                                 .messageCategory(MessageCategory.TransactionStatus)
                                 .messageType(MessageType.Request)
-                                .serviceID("SERVICEID1")
+                                .serviceID(generateRandomServiceID())
                                 .build()
                 )
                 .request(new TransactionStatusRequest())
@@ -188,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
                                 .messageClass(MessageClass.Service)
                                 .messageCategory(MessageCategory.Payment)
                                 .messageType(MessageType.Request)
-                                .serviceID("SERVICEID1")
+                                .serviceID(generateRandomServiceID())
                                 .build()
                 )
                 .request(
