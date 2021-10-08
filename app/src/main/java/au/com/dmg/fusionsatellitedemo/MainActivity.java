@@ -20,9 +20,9 @@ import au.com.dmg.fusion.data.MessageClass;
 import au.com.dmg.fusion.data.MessageType;
 import au.com.dmg.fusion.data.PaymentType;
 import au.com.dmg.fusion.data.UnitOfMeasure;
-import au.com.dmg.fusion.request.SaleTerminalData;
 import au.com.dmg.fusion.request.SaleToPOIRequest;
 import au.com.dmg.fusion.request.paymentrequest.AmountsReq;
+import au.com.dmg.fusion.request.paymentrequest.OriginalPOITransaction;
 import au.com.dmg.fusion.request.paymentrequest.PaymentData;
 import au.com.dmg.fusion.request.paymentrequest.PaymentRequest;
 import au.com.dmg.fusion.request.paymentrequest.PaymentTransaction;
@@ -34,15 +34,19 @@ import au.com.dmg.fusion.response.SaleToPOIResponse;
 
 public class MainActivity extends AppCompatActivity {
 
+    SaleToPOIResponse response = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         Button buttonRefund = findViewById(R.id.button_refund);
+        Button buttonCashout = findViewById(R.id.button_cashout);
         Button buttonPayment = findViewById(R.id.button_payment);
         Button buttonTranactionStatus = findViewById(R.id.button_transaction_status);
         Button buttonPreAuth = findViewById(R.id.button_pre_auth);
+        Button buttonCompletion = findViewById(R.id.button_completion);
 
         buttonRefund.setOnClickListener(v -> {
             sendRefundRequest();
@@ -55,6 +59,12 @@ public class MainActivity extends AppCompatActivity {
         });
         buttonPreAuth.setOnClickListener(v -> {
             sendPreAuth();
+        });
+        buttonCompletion.setOnClickListener(v -> {
+            sendCompletion();
+        });
+        buttonCashout.setOnClickListener(v -> {
+            sendCashOut();
         });
 
         Intent intent = getIntent();
@@ -76,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
                                 .operatorLanguage("en")
                                 .saleTransactionID(new SaleTransactionID.Builder()
                                         .timestamp(Instant.ofEpochMilli(System.currentTimeMillis()))
-                                        .transactionID("2371289312323")
+                                        .transactionID(generateTransactionId())
                                         .build())
                                 .build())
                         .paymentTransaction(
@@ -94,11 +104,11 @@ public class MainActivity extends AppCompatActivity {
                                                 .quantity(new BigDecimal(1.0))
                                                 .productLabel("Stuff")
                                                 .build())
-                                        .paymentData(new PaymentData.Builder()
-                                                .paymentType(PaymentType.Normal)
-                                                .build())
                                         .build()
                         )
+                        .paymentData(new PaymentData.Builder()
+                                .paymentType(PaymentType.Normal)
+                                .build())
                         .build()
                 )
                 .build();
@@ -107,18 +117,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private String generateRandomServiceID(){
+    private String generateRandomServiceID() {
         StringBuilder serviceId = new StringBuilder();
 
         Random rand = new Random();
-        for (int i=0; i<10; ++i) {
+        for (int i = 0; i < 10; ++i) {
             serviceId.append(rand.nextInt(10));
         }
         return serviceId.toString();
     }
 
     private void sendRequest(SaleToPOIRequest request) {
-        Intent intent = getPackageManager().getLaunchIntentForPackage("au.com.dmg.axispay");
+        Intent intent = getPackageManager().getLaunchIntentForPackage(Message.AXISPAY_PACKAGE_NAME);
         if (intent == null) {
             Toast.makeText(this, "AxisPay not Available.", Toast.LENGTH_SHORT).show();
             return;
@@ -127,15 +137,13 @@ public class MainActivity extends AppCompatActivity {
         Message message = new Message(request);
 
         // this is required for the intent filter.
-        intent.setAction("au.com.axispay.action.SaleToPOIRequest");
-        // this is required for the intent filter.
-        intent.addCategory(Intent.CATEGORY_DEFAULT);
+        intent.setAction(Message.INTENT_ACTION_SALETOPOI_REQUEST);
 
         intent.putExtra(Message.INTENT_EXTRA_MESSAGE, message.toJson());
         intent.putExtra(Message.INTENT_EXTRA_PARENT_ID, this.getPackageName());
         // name of this app, that get's treated as the POS label by the terminal.
-        intent.putExtra("ApplicationName", "DemoPOS");
-        intent.putExtra("SoftwareVersion", "1.0.0");
+        intent.putExtra(Message.INTENT_EXTRA_APPLICATION_NAME, "DemoPOS");
+        intent.putExtra(Message.INTENT_EXTRA_APPLICATION_VERSION, "1.0.0");
 
         startActivity(intent);
     }
@@ -157,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
                                                 .operatorLanguage("en")
                                                 .saleTransactionID(
                                                         new SaleTransactionID.Builder()
-                                                                .transactionID("x")
+                                                                .transactionID(generateTransactionId())
                                                                 .timestamp(Instant.ofEpochMilli(System.currentTimeMillis()))
                                                                 .build()
                                                 ).build()
@@ -170,13 +178,14 @@ public class MainActivity extends AppCompatActivity {
                                                                 .requestedAmount(new BigDecimal(1.0))
                                                                 .build()
                                                 )
-                                                .paymentData(
-                                                        new PaymentData.Builder()
-                                                                .paymentType(PaymentType.Refund)
-                                                                .build()
-                                                )
                                                 .build()
-                                ).build()
+                                )
+                                .paymentData(
+                                        new PaymentData.Builder()
+                                                .paymentType(PaymentType.Refund)
+                                                .build()
+                                )
+                                .build()
                 )
                 .build();
 
@@ -216,7 +225,7 @@ public class MainActivity extends AppCompatActivity {
                                                 .operatorLanguage("en")
                                                 .saleTransactionID(
                                                         new SaleTransactionID.Builder()
-                                                                .transactionID("x")
+                                                                .transactionID(generateTransactionId())
                                                                 .timestamp(Instant.ofEpochMilli(System.currentTimeMillis()))
                                                                 .build()
                                                 ).build()
@@ -229,19 +238,120 @@ public class MainActivity extends AppCompatActivity {
                                                                 .requestedAmount(new BigDecimal(1.0))
                                                                 .build()
                                                 )
-                                                .paymentData(
-                                                        new PaymentData.Builder()
-                                                                .paymentType(PaymentType.PreAuthorization)
-                                                                .build()
-                                                )
                                                 .build()
-                                ).build()
+                                )
+                                .paymentData(
+                                        new PaymentData.Builder()
+                                                .paymentType(PaymentType.FirstReservation)
+                                                .build()
+                                )
+                                .build()
                 )
                 .build();
 
         sendRequest(request);
     }
 
+    private void sendCompletion() {
+        if (response == null) {
+            Toast.makeText(this, "No prior transaction to perform completion", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        SaleToPOIRequest request = new SaleToPOIRequest.Builder()
+                .messageHeader(
+                        new MessageHeader.Builder()
+                                .messageClass(MessageClass.Service)
+                                .messageCategory(MessageCategory.Payment)
+                                .messageType(MessageType.Request)
+                                .serviceID(generateRandomServiceID())
+                                .build()
+                )
+                .request(
+                        new PaymentRequest.Builder()
+                                .saleData(
+                                        new SaleData.Builder()
+                                                .operatorLanguage("en")
+                                                .saleTransactionID(
+                                                        new SaleTransactionID.Builder()
+                                                                .transactionID(generateTransactionId())
+                                                                .timestamp(Instant.ofEpochMilli(System.currentTimeMillis()))
+                                                                .build()
+                                                ).build()
+                                )
+                                .paymentTransaction(
+                                        new PaymentTransaction.Builder()
+                                                .amountsReq(
+                                                        new AmountsReq.Builder()
+                                                                .currency("AUD")
+                                                                .requestedAmount(response.getPaymentResponse().getPaymentResult().getAmountsResp().getAuthorizedAmount())
+                                                                .build()
+                                                )
+                                                .originalPOITransaction(
+                                                        new OriginalPOITransaction.Builder()
+                                                                .POIID("")
+                                                                .POITransactionID(response.getPaymentResponse().getPoiData().getPOITransactionID())
+                                                                .saleID(response.getPaymentResponse().getSaleData().getSaleTransactionID().getTransactionID())
+                                                                .reuseCardDataFlag(true)
+                                                                .build()
+                                                )
+                                                .build()
+                                )
+                                .paymentData(
+                                        new PaymentData.Builder()
+                                                .paymentType(PaymentType.Completion)
+                                                .build()
+                                )
+                                .build()
+                )
+                .build();
+
+        sendRequest(request);
+    }
+
+    private void sendCashOut() {
+        SaleToPOIRequest request = new SaleToPOIRequest.Builder()
+                .messageHeader(
+                        new MessageHeader.Builder()
+                                .messageClass(MessageClass.Service)
+                                .messageCategory(MessageCategory.Payment)
+                                .messageType(MessageType.Request)
+                                .serviceID(generateRandomServiceID())
+                                .build()
+                )
+                .request(
+                        new PaymentRequest.Builder()
+                                .saleData(
+                                        new SaleData.Builder()
+                                                .operatorLanguage("en")
+                                                .saleTransactionID(
+                                                        new SaleTransactionID.Builder()
+                                                                .transactionID(generateTransactionId())
+                                                                .timestamp(Instant.ofEpochMilli(System.currentTimeMillis()))
+                                                                .build()
+                                                ).build()
+                                )
+                                .paymentTransaction(
+                                        new PaymentTransaction.Builder()
+                                                .amountsReq(
+                                                        new AmountsReq.Builder()
+                                                                .currency("AUD")
+                                                                .requestedAmount(new BigDecimal(1.0))
+                                                                .build()
+                                                )
+                                                .build()
+                                )
+                                .paymentData(
+                                        new PaymentData.Builder()
+                                                .paymentType(PaymentType.CashAdvance)
+                                                .build()
+                                )
+                                .build()
+                )
+                .build();
+
+        sendRequest(request);
+    }
 
     private Boolean isResponseIntent(Intent intent) {
         if (intent == null) {
@@ -262,6 +372,9 @@ public class MainActivity extends AppCompatActivity {
         handleResponse(message.getResponse());
     }
 
+    /*
+     * Required if your activity is a SingleTop
+     * */
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
@@ -271,8 +384,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void handleResponse(SaleToPOIResponse response) {
+        this.response = response;
         TextView textViewJson = findViewById(R.id.textView_response_json);
         Log.d("Response", response.toJson());
         textViewJson.setText(response.toJson());
+    }
+
+
+    /*
+     * For this test app, we will just use random numbers.
+     * */
+    private String generateTransactionId() {
+        String s = "";
+        Random r = new Random();
+        for (int i = 0; i < 10; ++i) {
+            int x = r.nextInt(10);
+            s += x;
+        }
+        return s;
     }
 }

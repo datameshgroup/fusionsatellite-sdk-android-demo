@@ -10,7 +10,7 @@
         android:id="@+id/button_payment"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="48dp"
+        android:layout_marginTop="24dp"
         android:text="Create Payment Request"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -23,6 +23,17 @@
         android:text="Create Refund Request"
         app:layout_constraintEnd_toEndOf="@+id/button_payment"
         app:layout_constraintStart_toStartOf="@+id/button_payment"
+        app:layout_constraintTop_toBottomOf="@+id/button_cashout" />
+
+    <Button
+        android:id="@+id/button_cashout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="0dp"
+        android:text="Create Cashout Request"
+        app:layout_constraintEnd_toEndOf="@+id/button_payment"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="@+id/button_payment"
         app:layout_constraintTop_toBottomOf="@+id/button_payment" />
 
     <Button
@@ -31,8 +42,9 @@
         android:layout_height="wrap_content"
         android:text="Create Transaction Status Request"
         app:layout_constraintEnd_toEndOf="@+id/button_payment"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@+id/button_payment"
-        app:layout_constraintTop_toBottomOf="@+id/button_pre_auth" />
+        app:layout_constraintTop_toBottomOf="@+id/button_completion" />
 
     <TextView
         android:id="@+id/textView_response_title"
@@ -73,5 +85,14 @@
         app:layout_constraintEnd_toEndOf="@+id/button_payment"
         app:layout_constraintStart_toStartOf="@+id/button_payment"
         app:layout_constraintTop_toBottomOf="@+id/button_refund" />
+
+    <Button
+        android:id="@+id/button_completion"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Create Completion Request"
+        app:layout_constraintEnd_toEndOf="@+id/button_pre_auth"
+        app:layout_constraintStart_toStartOf="@+id/button_pre_auth"
+        app:layout_constraintTop_toBottomOf="@+id/button_pre_auth" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
