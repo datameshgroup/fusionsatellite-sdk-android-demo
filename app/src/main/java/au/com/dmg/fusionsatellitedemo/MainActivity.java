@@ -20,6 +20,7 @@ import au.com.dmg.fusion.data.MessageClass;
 import au.com.dmg.fusion.data.MessageType;
 import au.com.dmg.fusion.data.PaymentType;
 import au.com.dmg.fusion.data.UnitOfMeasure;
+import au.com.dmg.fusion.request.SaleTerminalData;
 import au.com.dmg.fusion.request.SaleToPOIRequest;
 import au.com.dmg.fusion.request.paymentrequest.AmountsReq;
 import au.com.dmg.fusion.request.paymentrequest.OriginalPOITransaction;
@@ -35,6 +36,14 @@ import au.com.dmg.fusion.response.SaleToPOIResponse;
 public class MainActivity extends AppCompatActivity {
 
     SaleToPOIResponse response = null;
+
+    @Override
+    protected void onActivityResult(int requestCode, int responseCode, Intent data){
+        super.onActivityResult(requestCode, responseCode, data);
+        if(data != null) {
+            this.onNewIntent(data);
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,11 +75,6 @@ public class MainActivity extends AppCompatActivity {
         buttonCashout.setOnClickListener(v -> {
             sendCashOut();
         });
-
-        Intent intent = getIntent();
-        if (isResponseIntent(intent)) {
-            handleResponseIntent(intent);
-        }
     }
 
     private void sendPaymentRequest() {
@@ -97,12 +101,12 @@ public class MainActivity extends AppCompatActivity {
                                                 .build())
                                         .addSaleItem(new SaleItem.Builder()
                                                 .itemID(1)
-                                                .productCode("X")
-                                                .unitOfMeasure(UnitOfMeasure.Other)
+                                                .productCode("5")
+                                                .unitOfMeasure(UnitOfMeasure.Litre)
                                                 .itemAmount(new BigDecimal(1.0))
                                                 .unitPrice(new BigDecimal(1.0))
                                                 .quantity(new BigDecimal(1.0))
-                                                .productLabel("Stuff")
+                                                .productLabel("Unleaded")
                                                 .build())
                                         .build()
                         )
@@ -128,24 +132,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void sendRequest(SaleToPOIRequest request) {
-        Intent intent = getPackageManager().getLaunchIntentForPackage(Message.AXISPAY_PACKAGE_NAME);
-        if (intent == null) {
-            Toast.makeText(this, "AxisPay not Available.", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        Intent intent = new Intent(Message.INTENT_ACTION_SALETOPOI_REQUEST);
+
         // wrapper of request.
         Message message = new Message(request);
 
-        // this is required for the intent filter.
-        intent.setAction(Message.INTENT_ACTION_SALETOPOI_REQUEST);
-
         intent.putExtra(Message.INTENT_EXTRA_MESSAGE, message.toJson());
-        intent.putExtra(Message.INTENT_EXTRA_PARENT_ID, this.getPackageName());
         // name of this app, that get's treated as the POS label by the terminal.
         intent.putExtra(Message.INTENT_EXTRA_APPLICATION_NAME, "DemoPOS");
         intent.putExtra(Message.INTENT_EXTRA_APPLICATION_VERSION, "1.0.0");
 
-        startActivity(intent);
+        startActivityForResult(intent, 100);
     }
 
     private void sendRefundRequest() {
@@ -192,14 +189,21 @@ public class MainActivity extends AppCompatActivity {
         sendRequest(request);
     }
 
+    private String lastServiceID = null;
+
     private void sendTransactionStatusRequest() {
+        if(lastServiceID == null){
+            Toast.makeText(this, "Perform a transaction first.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         SaleToPOIRequest request = new SaleToPOIRequest.Builder()
                 .messageHeader(
                         new MessageHeader.Builder()
                                 .messageClass(MessageClass.Service)
                                 .messageCategory(MessageCategory.TransactionStatus)
                                 .messageType(MessageType.Request)
-                                .serviceID(generateRandomServiceID())
+                                .serviceID(lastServiceID)
                                 .build()
                 )
                 .request(new TransactionStatusRequest())
@@ -377,6 +381,7 @@ public class MainActivity extends AppCompatActivity {
      * */
     @Override
     protected void onNewIntent(Intent intent) {
+        Log.d("Demo", "OnNewIntent(" + intent);
         super.onNewIntent(intent);
         if (isResponseIntent(intent)) {
             handleResponseIntent(intent);
@@ -388,6 +393,8 @@ public class MainActivity extends AppCompatActivity {
         TextView textViewJson = findViewById(R.id.textView_response_json);
         Log.d("Response", response.toJson());
         textViewJson.setText(response.toJson());
+
+        this.lastServiceID = response.getMessageHeader().getServiceID();
     }
 
 
