@@ -20,8 +20,8 @@ import au.com.dmg.fusion.data.MessageClass;
 import au.com.dmg.fusion.data.MessageType;
 import au.com.dmg.fusion.data.PaymentType;
 import au.com.dmg.fusion.data.UnitOfMeasure;
-import au.com.dmg.fusion.request.SaleTerminalData;
 import au.com.dmg.fusion.request.SaleToPOIRequest;
+import au.com.dmg.fusion.request.cardacquisitionrequest.CardAcquisitionRequest;
 import au.com.dmg.fusion.request.paymentrequest.AmountsReq;
 import au.com.dmg.fusion.request.paymentrequest.OriginalPOITransaction;
 import au.com.dmg.fusion.request.paymentrequest.PaymentData;
@@ -30,6 +30,7 @@ import au.com.dmg.fusion.request.paymentrequest.PaymentTransaction;
 import au.com.dmg.fusion.request.paymentrequest.SaleData;
 import au.com.dmg.fusion.request.paymentrequest.SaleItem;
 import au.com.dmg.fusion.request.paymentrequest.SaleTransactionID;
+import au.com.dmg.fusion.request.transactionstatusrequest.MessageReference;
 import au.com.dmg.fusion.request.transactionstatusrequest.TransactionStatusRequest;
 import au.com.dmg.fusion.response.SaleToPOIResponse;
 
@@ -38,9 +39,9 @@ public class MainActivity extends AppCompatActivity {
     SaleToPOIResponse response = null;
 
     @Override
-    protected void onActivityResult(int requestCode, int responseCode, Intent data){
+    protected void onActivityResult(int requestCode, int responseCode, Intent data) {
         super.onActivityResult(requestCode, responseCode, data);
-        if(data != null) {
+        if (data != null) {
             this.onNewIntent(data);
         }
     }
@@ -56,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
         Button buttonTranactionStatus = findViewById(R.id.button_transaction_status);
         Button buttonPreAuth = findViewById(R.id.button_pre_auth);
         Button buttonCompletion = findViewById(R.id.button_completion);
+        Button buttonCardAcquisition = findViewById(R.id.button_card_acquisition);
 
         buttonRefund.setOnClickListener(v -> {
             sendRefundRequest();
@@ -74,6 +76,9 @@ public class MainActivity extends AppCompatActivity {
         });
         buttonCashout.setOnClickListener(v -> {
             sendCashOut();
+        });
+        buttonCardAcquisition.setOnClickListener(v -> {
+            sendCardAcquisitionRequest();
         });
     }
 
@@ -136,6 +141,7 @@ public class MainActivity extends AppCompatActivity {
 
         // wrapper of request.
         Message message = new Message(request);
+        Log.d("Request", message.toJson());
 
         intent.putExtra(Message.INTENT_EXTRA_MESSAGE, message.toJson());
         // name of this app, that get's treated as the POS label by the terminal.
@@ -143,6 +149,30 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra(Message.INTENT_EXTRA_APPLICATION_VERSION, "1.0.0");
 
         startActivityForResult(intent, 100);
+    }
+
+    private void sendCardAcquisitionRequest() {
+        SaleToPOIRequest request = new SaleToPOIRequest.Builder()
+                .messageHeader(new MessageHeader.Builder()
+                        .serviceID(generateRandomServiceID())
+                        .messageClass(MessageClass.Service)
+                        .messageCategory(MessageCategory.CardAcquisition)
+                        .messageType(MessageType.Request)
+                        .build()
+                )
+                .request(new CardAcquisitionRequest.Builder()
+                        .saleData(new SaleData.Builder()
+                                .saleTransactionID(new SaleTransactionID.Builder()
+                                        .transactionID(generateTransactionId())
+                                        .timestamp(Instant.now())
+                                        .build())
+                                .tokenRequestedType("Customer")
+                                .build())
+                        .build()
+                )
+                .build();
+
+        sendRequest(request);
     }
 
     private void sendRefundRequest() {
@@ -192,7 +222,7 @@ public class MainActivity extends AppCompatActivity {
     private String lastServiceID = null;
 
     private void sendTransactionStatusRequest() {
-        if(lastServiceID == null){
+        if (lastServiceID == null) {
             Toast.makeText(this, "Perform a transaction first.", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -396,7 +426,6 @@ public class MainActivity extends AppCompatActivity {
 
         this.lastServiceID = response.getMessageHeader().getServiceID();
     }
-
 
     /*
      * For this test app, we will just use random numbers.
