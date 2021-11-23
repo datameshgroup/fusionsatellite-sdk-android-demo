@@ -19,17 +19,20 @@ import au.com.dmg.fusion.data.MessageCategory;
 import au.com.dmg.fusion.data.MessageClass;
 import au.com.dmg.fusion.data.MessageType;
 import au.com.dmg.fusion.data.PaymentType;
+import au.com.dmg.fusion.data.ReversalReason;
 import au.com.dmg.fusion.data.UnitOfMeasure;
 import au.com.dmg.fusion.request.SaleToPOIRequest;
 import au.com.dmg.fusion.request.cardacquisitionrequest.CardAcquisitionRequest;
 import au.com.dmg.fusion.request.paymentrequest.AmountsReq;
 import au.com.dmg.fusion.request.paymentrequest.OriginalPOITransaction;
+import au.com.dmg.fusion.request.paymentrequest.POITransactionID;
 import au.com.dmg.fusion.request.paymentrequest.PaymentData;
 import au.com.dmg.fusion.request.paymentrequest.PaymentRequest;
 import au.com.dmg.fusion.request.paymentrequest.PaymentTransaction;
 import au.com.dmg.fusion.request.paymentrequest.SaleData;
 import au.com.dmg.fusion.request.paymentrequest.SaleItem;
 import au.com.dmg.fusion.request.paymentrequest.SaleTransactionID;
+import au.com.dmg.fusion.request.reversalrequest.ReversalRequest;
 import au.com.dmg.fusion.request.transactionstatusrequest.MessageReference;
 import au.com.dmg.fusion.request.transactionstatusrequest.TransactionStatusRequest;
 import au.com.dmg.fusion.response.SaleToPOIResponse;
@@ -58,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
         Button buttonPreAuth = findViewById(R.id.button_pre_auth);
         Button buttonCompletion = findViewById(R.id.button_completion);
         Button buttonCardAcquisition = findViewById(R.id.button_card_acquisition);
+        Button buttonReversal = findViewById(R.id.button_reversal);
 
         buttonRefund.setOnClickListener(v -> {
             sendRefundRequest();
@@ -79,6 +83,9 @@ public class MainActivity extends AppCompatActivity {
         });
         buttonCardAcquisition.setOnClickListener(v -> {
             sendCardAcquisitionRequest();
+        });
+        buttonReversal.setOnClickListener(v -> {
+            sendReversal();
         });
     }
 
@@ -102,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
                                 new PaymentTransaction.Builder()
                                         .amountsReq(new AmountsReq.Builder()
                                                 .currency("AUD")
-                                                .requestedAmount(new BigDecimal(1.0))
+                                                .requestedAmount(new BigDecimal(3000.0))
                                                 .build())
                                         .addSaleItem(new SaleItem.Builder()
                                                 .itemID(1)
@@ -214,6 +221,34 @@ public class MainActivity extends AppCompatActivity {
                                 )
                                 .build()
                 )
+                .build();
+
+        sendRequest(request);
+    }
+
+    String lastTxid = null;
+    private void sendReversal(){
+        if(lastTxid == null){
+            Toast.makeText(this, "Send a transaction first.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        SaleToPOIRequest request = new SaleToPOIRequest.Builder()
+                .messageHeader(
+                        new MessageHeader.Builder()
+                                .messageClass(MessageClass.Service)
+                                .messageCategory(MessageCategory.Reversal)
+                                .messageType(MessageType.Request)
+                                .serviceID(generateRandomServiceID())
+                                .build()
+                )
+                .request(new ReversalRequest.Builder()
+                        .reversalReason(ReversalReason.SignatureDeclined)
+                        .originalPOITransaction(new OriginalPOITransaction.Builder()
+                                .POIID("x")
+                                .saleID("z")
+                                .POITransactionID(new POITransactionID(lastTxid, Instant.ofEpochMilli(System.currentTimeMillis())))
+                                .build())
+                        .build())
                 .build();
 
         sendRequest(request);
@@ -395,6 +430,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void handleResponseIntent(Intent intent) {
+        Log.d("Response", intent.getStringExtra(Message.INTENT_EXTRA_MESSAGE));
         Message message = null;
         try {
             message = Message.fromJson(intent.getStringExtra(Message.INTENT_EXTRA_MESSAGE));
@@ -425,6 +461,9 @@ public class MainActivity extends AppCompatActivity {
         textViewJson.setText(response.toJson());
 
         this.lastServiceID = response.getMessageHeader().getServiceID();
+        if(response.getPaymentResponse() != null) {
+            this.lastTxid = response.getPaymentResponse().getPoiData().getPOITransactionID().getTransactionID();
+        }
     }
 
     /*
