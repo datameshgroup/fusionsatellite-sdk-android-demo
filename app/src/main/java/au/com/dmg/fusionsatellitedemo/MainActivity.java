@@ -55,8 +55,10 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         Button buttonRefund = findViewById(R.id.button_refund);
+        Button buttonSigPayment = findViewById(R.id.button_payment_signature);
         Button buttonCashout = findViewById(R.id.button_cashout);
         Button buttonPayment = findViewById(R.id.button_payment);
+        Button buttonPaymentSmall = findViewById(R.id.button_payment_small);
         Button buttonTranactionStatus = findViewById(R.id.button_transaction_status);
         Button buttonPreAuth = findViewById(R.id.button_pre_auth);
         Button buttonCompletion = findViewById(R.id.button_completion);
@@ -64,10 +66,19 @@ public class MainActivity extends AppCompatActivity {
         Button buttonReversal = findViewById(R.id.button_reversal);
 
         buttonRefund.setOnClickListener(v -> {
+//            Instant myInstant = Instant.ofEpochMilli(System.currentTimeMillis());
+//            Toast.makeText(this, myInstant.toString(), Toast.LENGTH_SHORT).show();
             sendRefundRequest();
         });
         buttonPayment.setOnClickListener(v -> {
-            sendPaymentRequest();
+            sendPaymentRequest(new BigDecimal(1.00), true);
+        });
+        buttonPaymentSmall.setOnClickListener(v -> {
+            sendPaymentRequest(new BigDecimal(0.01), false);
+        });
+        buttonSigPayment.setOnClickListener(v -> {
+            sendPaymentRequest(new BigDecimal(7.44), false);
+//            startUpdateIntent();
         });
         buttonTranactionStatus.setOnClickListener(v -> {
             sendTransactionStatusRequest();
@@ -89,7 +100,22 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void sendPaymentRequest() {
+    private void startUpdateIntent(){
+        Intent intent = new Intent("au.com.dmg.axispay.action.UPDATE");
+        intent.putExtra("OnUpdateFinishAction", "au.com.dmg.axispay.action.UPDATE_RESPONSE");
+        startActivity(intent);
+    }
+
+    private void sendPaymentRequest(BigDecimal amount, boolean promptForTip) {
+        BigDecimal tipAmount = null;
+        // when we specify "0.00" (or any other non null value) in the tipAmount on paymentTransaction.amountsReq,tipAmount,
+        // satellite will not prompt for tip as one is provided.
+        // by leaving it blank/null, satellite will prompt for tip
+        if(!promptForTip){
+            tipAmount = new BigDecimal("0.00");
+        }
+
+
         SaleToPOIRequest request = new SaleToPOIRequest.Builder()
                 .messageHeader(new MessageHeader.Builder()
                         .messageClass(MessageClass.Service)
@@ -109,7 +135,8 @@ public class MainActivity extends AppCompatActivity {
                                 new PaymentTransaction.Builder()
                                         .amountsReq(new AmountsReq.Builder()
                                                 .currency("AUD")
-                                                .requestedAmount(new BigDecimal(3000.0))
+                                                .requestedAmount(amount)
+                                                .tipAmount(tipAmount)
                                                 .build())
                                         .addSaleItem(new SaleItem.Builder()
                                                 .itemID(1)
@@ -430,6 +457,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void handleResponseIntent(Intent intent) {
+        if(intent.hasExtra("result")){
+            Log.d("Demo", "Update response: " + intent.getStringExtra("result"));
+        }
+
         Log.d("Response", intent.getStringExtra(Message.INTENT_EXTRA_MESSAGE));
         Message message = null;
         try {

@@ -11,18 +11,19 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:text="Create Payment Request"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:text="Payment ($1.00)"
+        app:layout_constraintEnd_toStartOf="@+id/button_payment_small"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/button_refund"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Create Refund Request"
-        app:layout_constraintEnd_toEndOf="@+id/button_payment"
-        app:layout_constraintStart_toStartOf="@+id/button_payment"
+        android:text="Create Refund"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button_cashout" />
 
     <Button
@@ -39,22 +40,20 @@
 
     <Button
         android:id="@+id/button_transaction_status"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Create Transaction Status Request"
-        app:layout_constraintEnd_toEndOf="@+id/button_payment"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="@+id/button_payment"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button_completion" />
 
     <Button
         android:id="@+id/button_card_acquisition"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Create Card Acquistion Request"
-        app:layout_constraintEnd_toEndOf="@+id/button_payment"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="@+id/button_payment"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button_transaction_status" />
 
     <TextView
@@ -90,21 +89,23 @@
 
     <Button
         android:id="@+id/button_pre_auth"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Create PreAuth Request"
-        app:layout_constraintEnd_toEndOf="@+id/button_payment"
-        app:layout_constraintStart_toStartOf="@+id/button_payment"
+        android:text="Create PreAuth"
+        app:layout_constraintEnd_toStartOf="@+id/button_completion"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button_refund" />
 
     <Button
         android:id="@+id/button_completion"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Create Completion Request"
-        app:layout_constraintEnd_toEndOf="@+id/button_pre_auth"
-        app:layout_constraintStart_toStartOf="@+id/button_pre_auth"
-        app:layout_constraintTop_toBottomOf="@+id/button_pre_auth" />
+        android:text="Perform Completion"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/button_pre_auth"
+        app:layout_constraintTop_toBottomOf="@+id/button_refund" />
 
     <Button
         android:id="@+id/button_reversal"
@@ -116,6 +117,25 @@
         app:layout_constraintEnd_toStartOf="@+id/button_cashout"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/button_payment_signature" />
+
+    <Button
+        android:id="@+id/button_payment_signature"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Create Signature Payment"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button_payment" />
+
+    <Button
+        android:id="@+id/button_payment_small"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Payment ($0.01)"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/button_payment"
+        app:layout_constraintTop_toTopOf="@+id/button_payment" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
